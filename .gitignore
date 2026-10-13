@@ -1,0 +1,14 @@
+# Build output (scripts/common.sh may also put it outside the repo)
+build/
+*.exe
+
+# Run output from local demos
+*.log
+runs/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+__pycache__/

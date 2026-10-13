@@ -1,0 +1,14 @@
+{
+  // GitHub Codespaces / VS Code dev container: Ubuntu 24.04 with GCC, CMake, Ninja, Boost,
+  // libpq and a PostgreSQL server for the throwaway test cluster. Then:
+  //   bash scripts/build.sh && bash scripts/reconcile.sh && bash scripts/crash_test.sh
+  "name": "postrack",
+  "image": "mcr.microsoft.com/devcontainers/cpp:2-ubuntu-24.04",
+  "hostRequirements": { "cpus": 2 },
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y ninja-build libboost-dev libpq-dev postgresql",
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-vscode.cpptools", "ms-vscode.cmake-tools", "ms-python.python"]
+    }
+  }
+}

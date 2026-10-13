@@ -1,0 +1,22 @@
+== postrack_bench, 2026-10-13
+OS: MINGW64_NT-10.0-26200 3.6.7-fb42d713.x86_64 x86_64
+CPU: Intel(R) Core(TM) Ultra 7 165U
+logical CPUs: 14
+
+postrack_bench: 1000000 synthetic fills, 8 strategies x 20 symbols
+
+1. Apply only (in memory)
+  apply                                    1000000 fills      199.2 ms       5020027 fills/s
+
+2. Fill log + apply
+  fsync per 500 fills (2001 fsyncs)        1000000 fills     7133.0 ms        140194 fills/s
+  fsync every fill                           20000 fills    73065.5 ms           274 fills/s
+  no fsync (unsafe; for comparison)        1000000 fills      685.1 ms       1459576 fills/s
+
+3. Recovery: check and replay the whole log
+  open + checksum + replay                 1000000 fills      424.6 ms       2354968 fills/s
+
+4. Snapshots in PostgreSQL (final state of the run above)
+  160 positions, 12665 open lots
+  save (one transaction, COPY)   118.5 ms
+  load latest                    22.5 ms

@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        # Release runs the end-to-end proofs too; Debug keeps the assert() checks switched on.
+        config: [Release, Debug]
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postrack
+          POSTGRES_PASSWORD: postrack
+          POSTGRES_DB: postrack
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postrack" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      POSTRACK_TEST_DB: host=localhost port=5432 dbname=postrack user=postrack password=postrack
+      POSTRACK_DB: host=localhost port=5432 dbname=postrack user=postrack password=postrack
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install tools and libraries
+        run: sudo apt-get update && sudo apt-get install -y ninja-build libboost-dev libpq-dev
+
+      - name: Python reference tests
+        run: python3 -m unittest discover -s reference -v
+
+      - name: Build and test
+        run: bash scripts/build.sh ${{ matrix.config }}
+
+      - name: Reconcile 100,000 fills against the Python reference
+        if: matrix.config == 'Release'
+        run: |
+          bash scripts/reconcile.sh 100000 "$RUNNER_TEMP/reconcile.md"
+          cat "$RUNNER_TEMP/reconcile.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Crash test, 200,000 fills and 5 hard kills
+        if: matrix.config == 'Release'
+        env:
+          SIM_RATE: 50000 # 4 s of feed, so the kills land all through it
+        run: |
+          bash scripts/crash_test.sh 200000 5 2026 "$RUNNER_TEMP/crash.md"
+          cat "$RUNNER_TEMP/crash.md" >> "$GITHUB_STEP_SUMMARY"
